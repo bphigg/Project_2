@@ -1,4 +1,5 @@
 library(httr)
+library(lubridate)
 
 url <- "https://free-nba.p.rapidapi.com/players/942"
 

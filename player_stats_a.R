@@ -1,6 +1,5 @@
 player_id <- function(last_name, first_name = ""){
-  #last_name = noquote(last_name)
-  #first_name = noquote(first_name)
+  
   url <- "https://free-nba.p.rapidapi.com/players"
   
   queryString <- list(
