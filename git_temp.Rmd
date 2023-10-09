@@ -2,7 +2,7 @@
 title: "git_temp"
 author: "brian higginbotham"
 date: "2023-10-06"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
