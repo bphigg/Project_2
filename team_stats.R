@@ -7,11 +7,11 @@ team_stats <- function(team, season, postseason = FALSE){
     url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", season, "&team_ids[]=", id, "&postseason=", postseason)
     
     queryString <- list(
-      page = "0",
+      page = i,
       per_page = "25"
     )
     
-    response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
     
     temp <- fromJSON(rawToChar(response$content))$data
     temp <- bind_cols(temp %>% select(-home_team), temp$home_team)

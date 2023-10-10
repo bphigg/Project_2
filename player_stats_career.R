@@ -11,7 +11,7 @@ player_stats_career <- function(last_name, first_name = ""){
       per_page = "25"
     )
     
-    response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
     
     temp <- fromJSON(rawToChar(response$content))$data
     temp <- bind_cols(temp %>% select(-team), temp$team)
@@ -28,4 +28,4 @@ player_stats_career <- function(last_name, first_name = ""){
   return(stats)
   #return(colMeans(select(stats, ast:stl), na.rm=TRUE))
 }
-player_stats_career("del negro", "vincent")
+player_stats_career("bryant", "kobe")

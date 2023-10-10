@@ -1,9 +1,9 @@
 library(httr)
 
-url <- "https://free-nba.p.rapidapi.com/stats?seasons[]=2009&player_ids[]=942"
+url <- "https://free-nba.p.rapidapi.com/stats?seasons[]=2009&player_ids[]=1043"
 
 queryString <- list(
-  page = "0",
+  page = "3",
   per_page = "25"
 )
 
