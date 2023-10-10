@@ -6,7 +6,7 @@ url <- "https://free-nba.p.rapidapi.com/players/"
 queryString <- list(
   page = "0",
   per_page = "100",
-  search = "negro"
+  search = "del negro"
 )
 
 response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))

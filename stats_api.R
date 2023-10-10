@@ -17,8 +17,8 @@ library(jsonlite)
 str(response)
 parsed <- fromJSON(rawToChar(response$content))$data
 parsed <- bind_cols(parsed %>% select(-team), parsed$team)
-parsed <- bind_cols(parsed %>% select(-player), parsed$player)
 parsed <- bind_cols(parsed %>% select(-game), parsed$game)
+parsed <- bind_cols(parsed %>% select(-player), parsed$player)
 str(parsed)
 head(parsed)
 parsed$data

@@ -28,4 +28,4 @@ player_stats_career <- function(last_name, first_name = ""){
   return(stats)
   #return(colMeans(select(stats, ast:stl), na.rm=TRUE))
 }
-player_stats_career("duncan", "tim")
+player_stats_career("del negro", "vincent")
