@@ -1,6 +1,6 @@
 library(httr)
 
-url <- "https://free-nba.p.rapidapi.com/games?seasons[]=2010&team_ids[]=1"
+url <- "https://free-nba.p.rapidapi.com/games?seasons[]=2010&team_ids[]=14&postseason=TRUE"
 
 queryString <- list(
   page = "0",

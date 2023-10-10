@@ -1,4 +1,4 @@
-player_stats_year <- function(last_name, first_name = "", year = "career"){
+player_stats_year <- function(last_name, first_name = "", year){
   id <- player_id(last_name, first_name)
   n <- page_num(last_name, first_name, year)
   stats <- data.frame()
@@ -14,14 +14,15 @@ player_stats_year <- function(last_name, first_name = "", year = "career"){
     response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
     
     temp <- fromJSON(rawToChar(response$content))$data
-    temp <- temp %>% select("ast", "blk", "dreb", "fg3_pct", "fg3a", "fg3m", "fg_pct", "fga", "fgm", "ft_pct", "fta", "ftm", "min", "oreb", "pf", "pts", "reb", "stl")
+    
+    temp <- temp %>% select("ast", "blk", "min", "pf", "pts", "reb", "stl")
     stats <- rbind(stats, temp)
   }
-  stats$min <- ms(stats$min, quiet = TRUE)
+  stats <- stats %>% mutate(min=substr(stats$min, 1, 2))
+  stats$min <- as.numeric(stats$min)
   
   #return(stats)
   return(colMeans(select(stats, ast:stl), na.rm=TRUE))
 }
-finley <- player_stats_year("finley", "", 2009)
-str(finley)
-finley
+player_stats_year("duncan", "tim", 2014)
+

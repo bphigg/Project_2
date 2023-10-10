@@ -1,3 +1,5 @@
+##### page num with year ######
+
 page_num <- function(last_name, first_name = "", year = "career"){
   id <- player_id(last_name, first_name)
   
@@ -13,7 +15,26 @@ page_num <- function(last_name, first_name = "", year = "career"){
   n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
   return(n)
 }
+###################################
+##### page num without year #######
 
+page_num_career <- function(last_name, first_name = ""){
+  id <- player_id(last_name, first_name)
+  
+  url <- paste0("https://free-nba.p.rapidapi.com/stats?player_ids[]=", id)
+  
+  queryString <- list(
+    page = "0",
+    per_page = "25"
+  )
+  
+  response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+  
+  n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
+  return(n)
+}
+#######################
+##### player ID #######
 
 player_id <- function(last_name, first_name = ""){
   
