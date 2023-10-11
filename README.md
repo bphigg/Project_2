@@ -1,7 +1,12 @@
--   [1 Summary](#summary)
--   [2 Required Packages](#required-packages)
--   [3 Query API](#query-api)
--   [4 EDA](#eda)
+Project 2
+================
+brian higginbotham
+2023-10-06
+
+- [1 Summary](#1-summary)
+- [2 Required Packages](#2-required-packages)
+- [3 Query API](#3-query-api)
+- [4 EDA](#4-eda)
 
 # 1 Summary
 
@@ -19,15 +24,17 @@ we will see, this did provide some interesting and frustrating results.
 
 Here is a list of the packages that were used in this project.
 
-    library(httr)
-    library(tidyverse)
-    library(dplyr)
-    library(tidyr)
-    library(jsonlite)
-    library(ggplot2)
-    library(gganimate)
-    library(gifski)
-    library(png)
+``` r
+library(httr)
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(jsonlite)
+library(ggplot2)
+library(gganimate)
+library(gifski)
+library(png)
+```
 
 # 3 Query API
 
@@ -70,23 +77,25 @@ The first step to creating the `player_stats()` query was to write a
 small function that could take in the player’s name and return the
 `player_id` to be used in the `Stats` endpoint.
 
-    player_id <- function(last_name, first_name = ""){
-      
-      url <- "https://free-nba.p.rapidapi.com/players"
-      
-      queryString <- list(
-        page = "0",
-        per_page = "25",
-        search = paste(first_name, last_name)
-      )
-      
-      response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-      
-      id <- fromJSON(rawToChar(response$content))$data[1]
-      attributes(id)$names[1] <- "player_id"
-      
-      return(id)
-    }
+``` r
+player_id <- function(last_name, first_name = ""){
+  
+  url <- "https://free-nba.p.rapidapi.com/players"
+  
+  queryString <- list(
+    page = "0",
+    per_page = "25",
+    search = paste(first_name, last_name)
+  )
+  
+  response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+  
+  id <- fromJSON(rawToChar(response$content))$data[1]
+  attributes(id)$names[1] <- "player_id"
+  
+  return(id)
+}
+```
 
 <br> Next, in order to loop through all the “pages” and collect the
 data, I’ll need to know how many pages are associated with the queried
@@ -97,23 +106,25 @@ determine the total number of pages that would be returned based on the
 input parameters. This function is designed for a specific `year`
 parameter:
 
-    # The final function will have year default to "career" if it is left empty. For this piece, year will have a numeric value (2010, 2015, 2023, etc)
-    page_num <- function(last_name, first_name = "", year = "career"){
-    # This is the previous function that identifies the player_id
-      id <- player_id(last_name, first_name)
-      
-      url <- paste0("https://free-nba.p.rapidapi.com/stats?seasons[]=", year, "&player_ids[]=", id)
-      
-      queryString <- list(
-        page = "0",
-        per_page = "25"
-      )
-      
-      response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-      
-      n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
-      return(n)
-    }
+``` r
+# The final function will have year default to "career" if it is left empty. For this piece, year will have a numeric value (2010, 2015, 2023, etc)
+page_num <- function(last_name, first_name = "", year = "career"){
+# This is the previous function that identifies the player_id
+  id <- player_id(last_name, first_name)
+  
+  url <- paste0("https://free-nba.p.rapidapi.com/stats?seasons[]=", year, "&player_ids[]=", id)
+  
+  queryString <- list(
+    page = "0",
+    per_page = "25"
+  )
+  
+  response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+  
+  n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
+  return(n)
+}
+```
 
 The input parameters for this function will be the same as the input
 parameters of the final function. In fact, this function returns the
@@ -126,21 +137,23 @@ default to career stats. Since the URL in the above function is set up
 for “?seasons\[\]= year”, I’ll need to modify it slightly in order to
 get the total number of pages for the player’s career stats.
 
-    page_num_career <- function(last_name, first_name = ""){
-      id <- player_id(last_name, first_name)
-    # I've removed the season parameter from the URL
-      url <- paste0("https://free-nba.p.rapidapi.com/stats?player_ids[]=", id)
-      
-      queryString <- list(
-        page = "0",
-        per_page = "25"
-      )
-      
-      response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-      
-      n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
-      return(n)
-    }
+``` r
+page_num_career <- function(last_name, first_name = ""){
+  id <- player_id(last_name, first_name)
+# I've removed the season parameter from the URL
+  url <- paste0("https://free-nba.p.rapidapi.com/stats?player_ids[]=", id)
+  
+  queryString <- list(
+    page = "0",
+    per_page = "25"
+  )
+  
+  response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+  
+  n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
+  return(n)
+}
+```
 
 <br> Now I’m ready to construct the query that will return the player’s
 stats by year. As I mentioned above, it is very similar to the function
@@ -150,38 +163,40 @@ now I will access the `$data` component.
 
 Let’s take a look at the `player_stats_year()` function
 
-    player_stats_year <- function(last_name, first_name = "", year){
-      id <- player_id(last_name, first_name)
-      n <- page_num(last_name, first_name, year)
-      stats <- data.frame()
-      
-      for(i in 1:n){
-        url <- paste0("https://free-nba.p.rapidapi.com/stats?seasons[]=", year, "&player_ids[]=", id)
-        
-        queryString <- list(
-          page = i,
-          per_page = "25"
-        )
-        
-        response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-        
-        temp <- fromJSON(rawToChar(response$content))$data
-        attributes(temp$team)$names[1] <- "teamid"
-        temp <- bind_cols(temp %>% select(-team), temp$team)
-        attributes(temp$game)$names[1] <- "gameid"
-        temp <- bind_cols(temp %>% select(-game), temp$game)
-        attributes(temp$player)$names[1] <- "playerid"
-        temp <- bind_cols(temp %>% select(-player), temp$player)
-        
-        temp <- temp %>% select("first_name", "last_name", "abbreviation", "date", "season", "home_team_id", "home_team_score", "visitor_team_id", "visitor_team_score", "ast", "blk", "min", "pf", "pts", "reb", "stl")
-        stats <- rbind(stats, temp)
-      }
-      stats <- stats %>% mutate(min=substr(stats$min, 1, 2))
-      stats$min <- as.numeric(stats$min)
-      attributes(stats)$names[3] <- "team"
-      
-      return(stats)
-    }
+``` r
+player_stats_year <- function(last_name, first_name = "", year){
+  id <- player_id(last_name, first_name)
+  n <- page_num(last_name, first_name, year)
+  stats <- data.frame()
+  
+  for(i in 1:n){
+    url <- paste0("https://free-nba.p.rapidapi.com/stats?seasons[]=", year, "&player_ids[]=", id)
+    
+    queryString <- list(
+      page = i,
+      per_page = "25"
+    )
+    
+    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+    
+    temp <- fromJSON(rawToChar(response$content))$data
+    attributes(temp$team)$names[1] <- "teamid"
+    temp <- bind_cols(temp %>% select(-team), temp$team)
+    attributes(temp$game)$names[1] <- "gameid"
+    temp <- bind_cols(temp %>% select(-game), temp$game)
+    attributes(temp$player)$names[1] <- "playerid"
+    temp <- bind_cols(temp %>% select(-player), temp$player)
+    
+    temp <- temp %>% select("first_name", "last_name", "abbreviation", "date", "season", "home_team_id", "home_team_score", "visitor_team_id", "visitor_team_score", "ast", "blk", "min", "pf", "pts", "reb", "stl")
+    stats <- rbind(stats, temp)
+  }
+  stats <- stats %>% mutate(min=substr(stats$min, 1, 2))
+  stats$min <- as.numeric(stats$min)
+  attributes(stats)$names[3] <- "team"
+  
+  return(stats)
+}
+```
 
 After the `player_id()` and `page_num()` functions, I’ve initiated the
 empty dataframe `stats`. This is where I’ll collect my pages of data
@@ -231,50 +246,54 @@ I have a very similar function for the Player Stats by Career query.
 Exactly like the `page_num_career()` function, it simply has a modified
 URL.
 
-    player_stats_career <- function(last_name, first_name = ""){
-      id <- player_id(last_name, first_name)
-      n <- page_num_career(last_name, first_name)
-      stats <- data.frame()
-      
-      for(i in 1:n){
-        url <- paste0("https://free-nba.p.rapidapi.com/stats?player_ids[]=", id)
-        
-        queryString <- list(
-          page = i,
-          per_page = "25"
-        )
-        
-        response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-        
-        temp <- fromJSON(rawToChar(response$content))$data
-        attributes(temp$team)$names[1] <- "teamid"
-        temp <- bind_cols(temp %>% select(-team), temp$team)
-        attributes(temp$game)$names[1] <- "gameid"
-        temp <- bind_cols(temp %>% select(-game), temp$game)
-        attributes(temp$player)$names[1] <- "playerid"
-        temp <- bind_cols(temp %>% select(-player), temp$player)
-        
-        temp <- temp %>% select("first_name", "last_name", "abbreviation", "date", "season", "home_team_id", "home_team_score", "visitor_team_id", "visitor_team_score", "ast", "blk", "min", "pf", "pts", "reb", "stl")
-        stats <- rbind(stats, temp)
-      }
-      stats <- stats %>% mutate(min=substr(stats$min, 1, 2))
-      stats$min <- as.numeric(stats$min)
-      attributes(stats)$names[3] <- "team"
-      
-      return(stats)
-    }
+``` r
+player_stats_career <- function(last_name, first_name = ""){
+  id <- player_id(last_name, first_name)
+  n <- page_num_career(last_name, first_name)
+  stats <- data.frame()
+  
+  for(i in 1:n){
+    url <- paste0("https://free-nba.p.rapidapi.com/stats?player_ids[]=", id)
+    
+    queryString <- list(
+      page = i,
+      per_page = "25"
+    )
+    
+    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+    
+    temp <- fromJSON(rawToChar(response$content))$data
+    attributes(temp$team)$names[1] <- "teamid"
+    temp <- bind_cols(temp %>% select(-team), temp$team)
+    attributes(temp$game)$names[1] <- "gameid"
+    temp <- bind_cols(temp %>% select(-game), temp$game)
+    attributes(temp$player)$names[1] <- "playerid"
+    temp <- bind_cols(temp %>% select(-player), temp$player)
+    
+    temp <- temp %>% select("first_name", "last_name", "abbreviation", "date", "season", "home_team_id", "home_team_score", "visitor_team_id", "visitor_team_score", "ast", "blk", "min", "pf", "pts", "reb", "stl")
+    stats <- rbind(stats, temp)
+  }
+  stats <- stats %>% mutate(min=substr(stats$min, 1, 2))
+  stats$min <- as.numeric(stats$min)
+  attributes(stats)$names[3] <- "team"
+  
+  return(stats)
+}
+```
 
 <br> Finally, we can put it all together in one wrapper function that
 will determine which function to use and return the appropriate query
 results:
 
-    player_stats <- function(last_name, first_name = "", year = 'career'){
-      if(year == "career"){
-        return(player_stats_career(last_name, first_name))
-      } else {
-        return(player_stats_year(last_name, first_name, year))
-      }
-    }
+``` r
+player_stats <- function(last_name, first_name = "", year = 'career'){
+  if(year == "career"){
+    return(player_stats_career(last_name, first_name))
+  } else {
+    return(player_stats_year(last_name, first_name, year))
+  }
+}
+```
 
 <br> \## Team Stats
 
@@ -282,19 +301,21 @@ The team stats info resides in the `Games` API endpoint, so the first
 step is to create a function that will retrieve the `team_id` based on
 the team name entered.
 
-    get_team_id <- function(team){
+``` r
+get_team_id <- function(team){
 
-    url <- "https://free-nba.p.rapidapi.com/teams"
+url <- "https://free-nba.p.rapidapi.com/teams"
 
-    queryString <- list(page = "0")
+queryString <- list(page = "0")
 
-    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
 
-    parsed <- fromJSON(rawToChar(response$content))$data
+parsed <- fromJSON(rawToChar(response$content))$data
 
-    filter <- parsed %>% filter(name == team)
-    return(filter$id)
-    }
+filter <- parsed %>% filter(name == team)
+return(filter$id)
+}
+```
 
 The Team endpoint of the API only returns 28 rows - one for each NBA
 team. So I wrote this funciton to simply retrieve all 28 teams and then
@@ -305,21 +326,23 @@ I also needed to get the total number of pages produced by the query
 parameters to be able to use a `for loop`. This function is almost
 identical to that used for the same purpose with `player_stats()`.
 
-    page_num_team <- function(team, season, postseason){
-      id <- get_team_id(team)
-      
-      url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", year, "&team_ids[]=", id, "&postseason=", postseason)
-      
-      queryString <- list(
-        page = "0",
-        per_page = "25"
-      )
-      
-      response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-      
-      n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
-      return(n)
-    }
+``` r
+page_num_team <- function(team, season, postseason){
+  id <- get_team_id(team)
+  
+  url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", year, "&team_ids[]=", id, "&postseason=", postseason)
+  
+  queryString <- list(
+    page = "0",
+    per_page = "25"
+  )
+  
+  response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+  
+  n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
+  return(n)
+}
+```
 
 <br> The `team_stats()` function is similar to the `player_stats()`
 except I’ll be querying the `Games` endpoint. The function requires a
@@ -331,36 +354,38 @@ would be possible, if the user wanted, to pull data from every NBA game
 for every season, but I thought for the purposes of this assignment that
 the results would be too large.
 
-    team_stats <- function(team, season, postseason = FALSE){
-      id <- get_team_id(team)
-      n <- page_num_team(team, season, postseason)
-      team_stats <- data.frame()
-      
-      for(i in 1:n){
-        url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", season, "&team_ids[]=", id, "&postseason=", postseason)
-        
-        queryString <- list(
-          page = i,
-          per_page = "25"
-        )
-        
-        response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
-        
-        temp <- fromJSON(rawToChar(response$content))$data
-        attributes(temp$home_team)$names[1] <- "hometeamid"
-        temp <- bind_cols(temp %>% select(-home_team), temp$home_team)
-        attributes(temp)$names[12:17] <- c("home_team_id", "home_team_city", "home_team_conf", "home_team_div", "home_team", "home_team_name")
-        attributes(temp$visitor_team)$names[1] <- "visitorteamid"
-        temp <- bind_cols(temp %>% select(-visitor_team), temp$visitor_team)
-        attributes(temp)$names[18:23] <- c("visitor_team_id", "visitor_team_city", "visitor_team_conf", "visitor_team_div", "visitor_team", "visitor_team_name")
-        
-        temp <- temp %>% select("date", "postseason", "season", "home_team_id", "home_team_city", "home_team_conf", "home_team_div", "home_team_name", "home_team_score", "visitor_team_id", "visitor_team_city", "visitor_team_conf", "visitor_team_div", "visitor_team_name", "visitor_team_score")
-        
-        team_stats <- rbind(team_stats, temp)
-      }
+``` r
+team_stats <- function(team, season, postseason = FALSE){
+  id <- get_team_id(team)
+  n <- page_num_team(team, season, postseason)
+  team_stats <- data.frame()
+  
+  for(i in 1:n){
+    url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", season, "&team_ids[]=", id, "&postseason=", postseason)
+    
+    queryString <- list(
+      page = i,
+      per_page = "25"
+    )
+    
+    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+    
+    temp <- fromJSON(rawToChar(response$content))$data
+    attributes(temp$home_team)$names[1] <- "hometeamid"
+    temp <- bind_cols(temp %>% select(-home_team), temp$home_team)
+    attributes(temp)$names[12:17] <- c("home_team_id", "home_team_city", "home_team_conf", "home_team_div", "home_team", "home_team_name")
+    attributes(temp$visitor_team)$names[1] <- "visitorteamid"
+    temp <- bind_cols(temp %>% select(-visitor_team), temp$visitor_team)
+    attributes(temp)$names[18:23] <- c("visitor_team_id", "visitor_team_city", "visitor_team_conf", "visitor_team_div", "visitor_team", "visitor_team_name")
+    
+    temp <- temp %>% select("date", "postseason", "season", "home_team_id", "home_team_city", "home_team_conf", "home_team_div", "home_team_name", "home_team_score", "visitor_team_id", "visitor_team_city", "visitor_team_conf", "visitor_team_div", "visitor_team_name", "visitor_team_score")
+    
+    team_stats <- rbind(team_stats, temp)
+  }
 
-      return(team_stats)
-    }
+  return(team_stats)
+}
+```
 
 The `for loop` and `bind_cols()` work exactly the same as they did in
 `player_stats()`. <br>
@@ -386,8 +411,10 @@ matched up against different divisions.
 
 Let’s pull in the Spurs 2013 game stats and inspect the structure.
 
-    spurs_2013_r <- team_stats("Spurs", 2013)
-    str(spurs_2013_r)
+``` r
+spurs_2013_r <- team_stats("Spurs", 2013)
+str(spurs_2013_r)
+```
 
     ## 'data.frame':    82 obs. of  15 variables:
     ##  $ date              : chr  "2014-04-08T00:00:00.000Z" "2013-11-15T00:00:00.000Z" "2013-11-30T00:00:00.000Z" "2013-11-05T00:00:00.000Z" ...
@@ -412,14 +439,18 @@ and run `if_else()` to determine if the column should be populated with
 a `W` or `L`. I’ll use logical operators to determine if the Spurs won
 or lost.
 
-    spurs_2013_r <- spurs_2013_r %>%
-      mutate(W_L = if_else(home_team_id == "SAS" & home_team_score > visitor_team_score, "W", 
-                           if_else(visitor_team_id == "SAS" & visitor_team_score > home_team_score, "W", "L")))
+``` r
+spurs_2013_r <- spurs_2013_r %>%
+  mutate(W_L = if_else(home_team_id == "SAS" & home_team_score > visitor_team_score, "W", 
+                       if_else(visitor_team_id == "SAS" & visitor_team_score > home_team_score, "W", "L")))
+```
 
 Now I’ll run a very simple contingency table to get the season win/loss
 record.
 
-    table(spurs_2013_r$W_L)
+``` r
+table(spurs_2013_r$W_L)
+```
 
     ## 
     ##  L  W 
@@ -440,17 +471,21 @@ column and another in which the Spurs only occupy the `visitor_team`
 column. From there, I can rename the columns appropriately and then
 recombine the objects back into a single dataframe using `rbind()`.
 
-    spurs_2013_home <- spurs_2013_r %>% filter(visitor_team_id != "SAS") %>% mutate(location = "home")%>% select(date, visitor_team_id, visitor_team_conf, visitor_team_div, visitor_team_score, home_team_id, home_team_score, W_L, location) %>% rename(opponent = visitor_team_id, opponent_conf = visitor_team_conf, opponent_div = visitor_team_div, opponent_score = visitor_team_score, SA = home_team_id, spurs_score = home_team_score)
+``` r
+spurs_2013_home <- spurs_2013_r %>% filter(visitor_team_id != "SAS") %>% mutate(location = "home")%>% select(date, visitor_team_id, visitor_team_conf, visitor_team_div, visitor_team_score, home_team_id, home_team_score, W_L, location) %>% rename(opponent = visitor_team_id, opponent_conf = visitor_team_conf, opponent_div = visitor_team_div, opponent_score = visitor_team_score, SA = home_team_id, spurs_score = home_team_score)
 
-    spurs_2013_away <- spurs_2013_r %>% filter(home_team_id != "SAS") %>% mutate(location = "away")%>% select(date, home_team_id, home_team_conf, home_team_div, home_team_score, visitor_team_id, visitor_team_score, W_L, location) %>% rename(opponent = home_team_id, opponent_conf = home_team_conf, opponent_div = home_team_div, opponent_score = home_team_score, SA = visitor_team_id, spurs_score = visitor_team_score)
+spurs_2013_away <- spurs_2013_r %>% filter(home_team_id != "SAS") %>% mutate(location = "away")%>% select(date, home_team_id, home_team_conf, home_team_div, home_team_score, visitor_team_id, visitor_team_score, W_L, location) %>% rename(opponent = home_team_id, opponent_conf = home_team_conf, opponent_div = home_team_div, opponent_score = home_team_score, SA = visitor_team_id, spurs_score = visitor_team_score)
 
-    spurs_2013_regular <- rbind(spurs_2013_home, spurs_2013_away)
+spurs_2013_regular <- rbind(spurs_2013_home, spurs_2013_away)
+```
 
 I also added another categorical variable, `location` that will be
 useful for analysis. Now let’s see how the Spurs record looks when split
 across different variables.
 
-    table(spurs_2013_regular$W_L, spurs_2013_regular$opponent_div)
+``` r
+table(spurs_2013_regular$W_L, spurs_2013_regular$opponent_div)
+```
 
     ##    
     ##     Atlantic Central Northwest Pacific Southeast Southwest
@@ -460,7 +495,9 @@ across different variables.
 The highest winning percentage by division is the Southeast - that’s
 Miami’s division.
 
-    table(spurs_2013_regular$W_L, spurs_2013_regular$opponent)
+``` r
+table(spurs_2013_regular$W_L, spurs_2013_regular$opponent)
+```
 
     ##    
     ##     ATL BKN BOS CHA CHI CLE DAL DEN DET GSW HOU IND LAC LAL MEM MIA MIL MIN NOP NYK OKC ORL PHI PHX POR SAC
@@ -474,7 +511,9 @@ Miami’s division.
 But it looks like the Spurs split their regular season games with the
 Heat.
 
-    table(spurs_2013_regular$W_L, spurs_2013_regular$opponent_div, spurs_2013_regular$location)
+``` r
+table(spurs_2013_regular$W_L, spurs_2013_regular$opponent_div, spurs_2013_regular$location)
+```
 
     ## , ,  = away
     ## 
@@ -496,11 +535,13 @@ advantage in the playoffs might be important.
 Now let’s take a look at the Spurs W/L record in relation to how many
 points they scored.
 
-    g <- ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L))
-    g + geom_histogram(position = "dodge", binwidth=1) +
-      labs(x = "Spurs Score", y = "Frequency", title = "Final Regular Season Scores by Win/Loss 2013-2014", fill = "W/L")
+``` r
+g <- ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L))
+g + geom_histogram(position = "dodge", binwidth=1) +
+  labs(x = "Spurs Score", y = "Frequency", title = "Final Regular Season Scores by Win/Loss 2013-2014", fill = "W/L")
+```
 
-![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/histogram_plot-1.png)
+![](/Users/brianhigginbotham/R/Project_2/README_files/figure-gfm/histogram_plot-1.png)<!-- -->
 <br> It looks like if the Spurs score over 100 pts in a game, they will
 be pretty hard to beat.
 
@@ -510,8 +551,10 @@ his performance and the team’s W/L record.
 
 Let’s first pull in Tim Duncan’s data for the 2013-2014 season.
 
-    timmy <- player_stats("duncan", "tim", 2013)
-    str(timmy)
+``` r
+timmy <- player_stats("duncan", "tim", 2013)
+str(timmy)
+```
 
     ## 'data.frame':    100 obs. of  16 variables:
     ##  $ first_name        : chr  "Tim" "Tim" "Tim" "Tim" ...
@@ -537,8 +580,10 @@ Now we’ll want to join Tim’s record to the Spurs regular season record.
 We can do this by merging on the `date` column since the date in both
 dataframes is the date both the Spurs and Tim played.
 
-    timmy_2013_team <- merge(timmy, spurs_2013_regular, by = "date")
-    str(timmy_2013_team)
+``` r
+timmy_2013_team <- merge(timmy, spurs_2013_regular, by = "date")
+str(timmy_2013_team)
+```
 
     ## 'data.frame':    77 obs. of  24 variables:
     ##  $ date              : chr  "2013-10-30T00:00:00.000Z" "2013-11-02T00:00:00.000Z" "2013-11-05T00:00:00.000Z" "2013-11-06T00:00:00.000Z" ...
@@ -573,11 +618,13 @@ game data.
 Let’s see if Tim Duncan’s point totals for games relates to the Spurs
 W/L record.
 
-    g <- ggplot(timmy_2013_team, aes(x = W_L, y = pts))
-    g + geom_boxplot(fill = 'grey') +
-      labs(x = "Win/Loss", y = "points", title = "Tim Duncan Points by Win/Loss 2013-2014")
+``` r
+g <- ggplot(timmy_2013_team, aes(x = W_L, y = pts))
+g + geom_boxplot(fill = 'grey') +
+  labs(x = "Win/Loss", y = "points", title = "Tim Duncan Points by Win/Loss 2013-2014")
+```
 
-![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/box_plot-1.png)
+![](/Users/brianhigginbotham/R/Project_2/README_files/figure-gfm/box_plot-1.png)<!-- -->
 <br> It does look like Tim is averaging over 15 points per game for Wins
 and less than 15 points per game for losses.
 
@@ -587,11 +634,13 @@ a stat that can be reflected in rebounds. So let’s take a look at Tim’s
 points and rebounds totals across his opponents divisions and the Spurs
 W/L record.
 
-    g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
-    g + geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
-      labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds vs division 2013-2014") + guides(color = guide_legend(title = "division")) + facet_wrap(~ W_L)
+``` r
+g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
+g + geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
+  labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds vs division 2013-2014") + guides(color = guide_legend(title = "division")) + facet_wrap(~ W_L)
+```
 
-![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/pts_reb_div_plot-1.png)
+![](/Users/brianhigginbotham/R/Project_2/README_files/figure-gfm/pts_reb_div_plot-1.png)<!-- -->
 <br> Looks like Tim had a really poor rebounding effort in a loss
 against a Southeast team. If you’ll recall, the Spurs went 9-1 against
 the Southeast, losing only to Miami. So it appears that Tim would need
@@ -601,11 +650,13 @@ past Miami.
 Let’s see if Tim’s performance is affected in way by the location of the
 game.
 
-    g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
-    g + geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
-      labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds by location 2013-2014") + guides(color = guide_legend(title = "location")) + facet_wrap(~ opponent_div)
+``` r
+g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
+g + geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
+  labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds by location 2013-2014") + guides(color = guide_legend(title = "location")) + facet_wrap(~ opponent_div)
+```
 
-![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/location_plot-1.png)
+![](/Users/brianhigginbotham/R/Project_2/README_files/figure-gfm/location_plot-1.png)<!-- -->
 <br> Except for one game, it appears Tim was not at his best at away
 games in the Central division.
 
@@ -614,18 +665,20 @@ averages in points and rebounds and see how they have changed through
 his career. So let’s pull Tim’s career stats, find the mean of his
 points and rebounds by season, and animate them in a point plot.
 
-    timmy_career_ <- player_stats("duncan", "tim")
-    timmy_career <- timmy_career_ %>% drop_na(pts, reb) %>% group_by(season) %>% summarize(points = mean(pts), rebounds = mean(reb))
+``` r
+timmy_career_ <- player_stats("duncan", "tim")
+timmy_career <- timmy_career_ %>% drop_na(pts, reb) %>% group_by(season) %>% summarize(points = mean(pts), rebounds = mean(reb))
 
-    ggplot(timmy_career, aes(points, rebounds)) +
-      geom_point(alpha = 0.7, show.legend = FALSE) +
-      labs(title = "Season: {frame_time}", x = "points", y = "rebounds") +
-      transition_time(season) +
-      ease_aes("linear")
+ggplot(timmy_career, aes(points, rebounds)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  labs(title = "Season: {frame_time}", x = "points", y = "rebounds") +
+  transition_time(season) +
+  ease_aes("linear")
+```
 
-    ## Rendering [======>-------------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [=======>------------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [========>-----------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [=========>----------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [==========>---------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [===========>--------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [============>-------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [=============>------------------------------------------------------------] at 41 fps ~ eta:  2sRendering [==============>-----------------------------------------------------------] at 41 fps ~ eta:  2sRendering [===============>----------------------------------------------------------] at 41 fps ~ eta:  2sRendering [================>---------------------------------------------------------] at 41 fps ~ eta:  2sRendering [=================>--------------------------------------------------------] at 41 fps ~ eta:  2sRendering [=================>--------------------------------------------------------] at 40 fps ~ eta:  2sRendering [==================>-------------------------------------------------------] at 41 fps ~ eta:  2sRendering [===================>------------------------------------------------------] at 41 fps ~ eta:  2sRendering [====================>-----------------------------------------------------] at 41 fps ~ eta:  2sRendering [====================>-----------------------------------------------------] at 40 fps ~ eta:  2sRendering [=====================>----------------------------------------------------] at 41 fps ~ eta:  2sRendering [======================>---------------------------------------------------] at 41 fps ~ eta:  2sRendering [=======================>--------------------------------------------------] at 40 fps ~ eta:  2sRendering [========================>-------------------------------------------------] at 40 fps ~ eta:  2sRendering [=========================>------------------------------------------------] at 40 fps ~ eta:  2sRendering [==========================>-----------------------------------------------] at 40 fps ~ eta:  2sRendering [===========================>----------------------------------------------] at 40 fps ~ eta:  2sRendering [============================>---------------------------------------------] at 40 fps ~ eta:  2sRendering [=============================>--------------------------------------------] at 40 fps ~ eta:  1sRendering [==============================>-------------------------------------------] at 40 fps ~ eta:  1sRendering [===============================>------------------------------------------] at 40 fps ~ eta:  1sRendering [================================>-----------------------------------------] at 40 fps ~ eta:  1sRendering [=================================>----------------------------------------] at 40 fps ~ eta:  1sRendering [==================================>---------------------------------------] at 40 fps ~ eta:  1sRendering [===================================>--------------------------------------] at 40 fps ~ eta:  1sRendering [====================================>-------------------------------------] at 40 fps ~ eta:  1sRendering [=====================================>------------------------------------] at 40 fps ~ eta:  1sRendering [======================================>-----------------------------------] at 40 fps ~ eta:  1sRendering [=======================================>----------------------------------] at 40 fps ~ eta:  1sRendering [========================================>---------------------------------] at 40 fps ~ eta:  1sRendering [=========================================>--------------------------------] at 40 fps ~ eta:  1sRendering [==========================================>-------------------------------] at 40 fps ~ eta:  1sRendering [===========================================>------------------------------] at 40 fps ~ eta:  1sRendering [============================================>-----------------------------] at 40 fps ~ eta:  1sRendering [=============================================>----------------------------] at 40 fps ~ eta:  1sRendering [==============================================>---------------------------] at 40 fps ~ eta:  1sRendering [===============================================>--------------------------] at 40 fps ~ eta:  1sRendering [================================================>-------------------------] at 40 fps ~ eta:  1sRendering [=================================================>------------------------] at 40 fps ~ eta:  1sRendering [==================================================>-----------------------] at 40 fps ~ eta:  1sRendering [===================================================>----------------------] at 40 fps ~ eta:  1sRendering [====================================================>---------------------] at 40 fps ~ eta:  1sRendering [=====================================================>--------------------] at 40 fps ~ eta:  1sRendering [======================================================>-------------------] at 40 fps ~ eta:  1sRendering [=======================================================>------------------] at 40 fps ~ eta:  1sRendering [========================================================>-----------------] at 40 fps ~ eta:  1sRendering [=========================================================>----------------] at 40 fps ~ eta:  1sRendering [==========================================================>---------------] at 40 fps ~ eta:  1sRendering [===========================================================>--------------] at 40 fps ~ eta:  0sRendering [============================================================>-------------] at 40 fps ~ eta:  0sRendering [=============================================================>------------] at 40 fps ~ eta:  0sRendering [==============================================================>-----------] at 40 fps ~ eta:  0sRendering [===============================================================>----------] at 40 fps ~ eta:  0sRendering [================================================================>---------] at 40 fps ~ eta:  0sRendering [=================================================================>--------] at 40 fps ~ eta:  0sRendering [==================================================================>-------] at 40 fps ~ eta:  0sRendering [===================================================================>------] at 40 fps ~ eta:  0sRendering [====================================================================>-----] at 40 fps ~ eta:  0sRendering [=====================================================================>----] at 40 fps ~ eta:  0sRendering [=====================================================================>----] at 39 fps ~ eta:  0sRendering [======================================================================>---] at 40 fps ~ eta:  0sRendering [=======================================================================>--] at 40 fps ~ eta:  0sRendering [========================================================================>-] at 40 fps ~ eta:  0sRendering [========================================================================>-] at 39 fps ~ eta:  0sRendering [==========================================================================] at 39 fps ~ eta:  0s                                                                                                           
+    ## Rendering [=====>--------------------------------------------------------------------] at 40 fps ~ eta:  2sRendering [======>-------------------------------------------------------------------] at 40 fps ~ eta:  2sRendering [=======>------------------------------------------------------------------] at 39 fps ~ eta:  2sRendering [========>-----------------------------------------------------------------] at 40 fps ~ eta:  2sRendering [=========>----------------------------------------------------------------] at 40 fps ~ eta:  2sRendering [==========>---------------------------------------------------------------] at 39 fps ~ eta:  2sRendering [===========>--------------------------------------------------------------] at 39 fps ~ eta:  2sRendering [============>-------------------------------------------------------------] at 40 fps ~ eta:  2sRendering [============>-------------------------------------------------------------] at 39 fps ~ eta:  2sRendering [=============>------------------------------------------------------------] at 39 fps ~ eta:  2sRendering [==============>-----------------------------------------------------------] at 39 fps ~ eta:  2sRendering [===============>----------------------------------------------------------] at 39 fps ~ eta:  2sRendering [================>---------------------------------------------------------] at 39 fps ~ eta:  2sRendering [=================>--------------------------------------------------------] at 39 fps ~ eta:  2sRendering [==================>-------------------------------------------------------] at 39 fps ~ eta:  2sRendering [===================>------------------------------------------------------] at 39 fps ~ eta:  2sRendering [====================>-----------------------------------------------------] at 39 fps ~ eta:  2sRendering [=====================>----------------------------------------------------] at 39 fps ~ eta:  2sRendering [======================>---------------------------------------------------] at 39 fps ~ eta:  2sRendering [=======================>--------------------------------------------------] at 39 fps ~ eta:  2sRendering [========================>-------------------------------------------------] at 39 fps ~ eta:  2sRendering [=========================>------------------------------------------------] at 39 fps ~ eta:  2sRendering [==========================>-----------------------------------------------] at 39 fps ~ eta:  2sRendering [===========================>----------------------------------------------] at 39 fps ~ eta:  2sRendering [============================>---------------------------------------------] at 39 fps ~ eta:  2sRendering [=============================>--------------------------------------------] at 39 fps ~ eta:  2sRendering [==============================>-------------------------------------------] at 39 fps ~ eta:  2sRendering [===============================>------------------------------------------] at 39 fps ~ eta:  1sRendering [================================>-----------------------------------------] at 38 fps ~ eta:  1sRendering [=================================>----------------------------------------] at 38 fps ~ eta:  1sRendering [==================================>---------------------------------------] at 38 fps ~ eta:  1sRendering [===================================>--------------------------------------] at 38 fps ~ eta:  1sRendering [====================================>-------------------------------------] at 38 fps ~ eta:  1sRendering [=====================================>------------------------------------] at 38 fps ~ eta:  1sRendering [======================================>-----------------------------------] at 38 fps ~ eta:  1sRendering [=======================================>----------------------------------] at 38 fps ~ eta:  1sRendering [========================================>---------------------------------] at 38 fps ~ eta:  1sRendering [=========================================>--------------------------------] at 38 fps ~ eta:  1sRendering [==========================================>-------------------------------] at 38 fps ~ eta:  1sRendering [===========================================>------------------------------] at 38 fps ~ eta:  1sRendering [============================================>-----------------------------] at 38 fps ~ eta:  1sRendering [=============================================>----------------------------] at 38 fps ~ eta:  1sRendering [==============================================>---------------------------] at 38 fps ~ eta:  1sRendering [===============================================>--------------------------] at 38 fps ~ eta:  1sRendering [================================================>-------------------------] at 38 fps ~ eta:  1sRendering [=================================================>------------------------] at 38 fps ~ eta:  1sRendering [==================================================>-----------------------] at 38 fps ~ eta:  1sRendering [===================================================>----------------------] at 38 fps ~ eta:  1sRendering [====================================================>---------------------] at 38 fps ~ eta:  1sRendering [=====================================================>--------------------] at 38 fps ~ eta:  1sRendering [======================================================>-------------------] at 38 fps ~ eta:  1sRendering [=======================================================>------------------] at 38 fps ~ eta:  1sRendering [========================================================>-----------------] at 38 fps ~ eta:  1sRendering [=========================================================>----------------] at 38 fps ~ eta:  1sRendering [==========================================================>---------------] at 38 fps ~ eta:  1sRendering [===========================================================>--------------] at 38 fps ~ eta:  0sRendering [============================================================>-------------] at 38 fps ~ eta:  0sRendering [=============================================================>------------] at 38 fps ~ eta:  0sRendering [==============================================================>-----------] at 38 fps ~ eta:  0sRendering [===============================================================>----------] at 38 fps ~ eta:  0sRendering [================================================================>---------] at 38 fps ~ eta:  0sRendering [=================================================================>--------] at 38 fps ~ eta:  0sRendering [==================================================================>-------] at 38 fps ~ eta:  0sRendering [===================================================================>------] at 38 fps ~ eta:  0sRendering [====================================================================>-----] at 38 fps ~ eta:  0sRendering [=====================================================================>----] at 38 fps ~ eta:  0sRendering [======================================================================>---] at 38 fps ~ eta:  0sRendering [=======================================================================>--] at 38 fps ~ eta:  0sRendering [========================================================================>-] at 38 fps ~ eta:  0sRendering [==========================================================================] at 38 fps ~ eta:  0s                                                                                                           
 
-![](README_files/figure-markdown_strict/animate_plot-1.gif) <br> Note
-that Tim’s career spans 18 years and that for the majority of those
-years, his points and rebounds exceed 15pt/10reb. Consistency of
-excellence! Tim Duncan 5-EVA! (’cuz 4-eva is too short)
+![](README_files/figure-gfm/animate_plot-1.gif)<!-- --> <br> Note that
+Tim’s career spans 18 years and that for the majority of those years,
+his points and rebounds exceed 15pt/10reb. Consistency of excellence!
+Tim Duncan 5-EVA! (’cuz 4-eva is too short)
