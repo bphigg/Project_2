@@ -36,10 +36,10 @@ library(png)
 My plan for the API query was to create a call that would allow the user to pull player and game data. For the player data, I would allow the user to select a specific player and season to collect data on or they could collect data on a player's entire career. For the game data, I wanted to allow the user to select the team, season, and specify whether they wanted regular or postseason data.  
 
 The endpoints of the API:  
-  * `Players` - contains player name, id, physical info (height, weight, etc), drafted team name
-  * `Teams` - contains team name, id, city, team abbreviation, team full name
-  * `Games` - date of game, game id, team ids (home & visitor), scores (home & visitor), season, postseason
-  * `Stats` - essentially the box score for each player on every game they've played (points, rebounds, etc)
+  + `Players` - contains player name, id, physical info (height, weight, etc), drafted team name  
+  + `Teams` - contains team name, id, city, team abbreviation, team full name  
+  + `Games` - date of game, game id, team ids (home & visitor), scores (home & visitor), season, postseason  
+  + `Stats` - essentially the box score for each player on every game they've played (points, rebounds, etc)  
 
 There were a few obstacles to creating the API query that should be mentioned here since a large part of constructing the functions was to get around them.  
 
