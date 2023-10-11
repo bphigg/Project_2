@@ -9,13 +9,13 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE)
 ```
 
-## Summary
+## Summary  
 
 This project encompasses querying data from an API and manipulating the results to produce some insightful EDA's.
 
 I chose the basketball API [Free NBA](https://rapidapi.com/theapiguy/api/free-nba) from [rapidapi](https://rapidapi.com) because I thought it would be interesting to compare player and team information in a way that gave the user more control than traditional basketball reference websites. As we will see, this did provide some interesting and frustrating results.  
 
-## Required Packages
+## Required Packages  
 
 Here is a list of the packages that were used in this project.
 
@@ -31,7 +31,7 @@ library(gifski)
 library(png)
 ```
 
-## Query API
+## Query API  
 
 My plan for the API query was to create a call that would allow the user to pull player and game data. For the player data, I would allow the user to select a specific player and season to collect data on or they could collect data on a player's entire career. For the game data, I wanted to allow the user to select the team, season, and specify whether they wanted regular or postseason data.  
 
@@ -46,6 +46,8 @@ There were a few obstacles to creating the API query that should be mentioned he
 The first issue is that the Free NBA API appears to be designed for websites or apps and NOT for data mining. Results from the API query come back "paged" with only the first page being pulled. This makes sense if one is pulling the data in through a website or app and can click on "page 2" to pull the next page of data. But for my purposes, a loop needed to be written to collect each page of data at a time.  
 
 The second issue was that the parameter options provided by the API were not very helpful. Specific players or teams could be searched for if one had the `player_id` or `team_id` - both of which were numeric keys that had no immediate reference.  
+
+### Player Stats  
 
 The first step to creating the `player_stats()` query was to write a small function that could take in the player's name and return the `player_id` to be used in the `Stats` endpoint.
 
@@ -193,7 +195,7 @@ player_stats_career <- function(last_name, first_name = ""){
 }
 ```
 <br>
-Finally, we can put it all together in one wrapper function that will determine which function to use: `player_stats_year()` or `player_stats_career()`
+Finally, we can put it all together in one wrapper function that will determine which function to use and return the appropriate query results:
 ```{r stats_wrapper}
 player_stats <- function(last_name, first_name = "", year = 'career'){
   if(year == "career"){
@@ -204,3 +206,148 @@ player_stats <- function(last_name, first_name = "", year = 'career'){
 }
 ```
 <br>
+### Team Stats  
+
+The team stats info resides in the `Games` API endpoint, so the first step is to create a function that will retrieve the `team_id` based on the team name entered.
+```{r team_id}
+get_team_id <- function(team){
+
+url <- "https://free-nba.p.rapidapi.com/teams"
+
+queryString <- list(page = "0")
+
+response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+
+parsed <- fromJSON(rawToChar(response$content))$data
+
+filter <- parsed %>% filter(name == team)
+return(filter$id)
+}
+```
+The Team endpoint of the API only returns 28 rows - one for each NBA team. So I wrote this funciton to simply retrieve all 28 teams and then match the entered parameter (`team`) to the team name (`name`) and return the `team_id`.  
+
+I also needed to get the total number of pages produced by the query parameters to be able to use a `for loop`. This function is almost identical to that used for the same purpose with `player_stats()`.
+```{r page_num_team}
+page_num_team <- function(team, season, postseason){
+  id <- get_team_id(team)
+  
+  url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", year, "&team_ids[]=", id, "&postseason=", postseason)
+  
+  queryString <- list(
+    page = "0",
+    per_page = "25"
+  )
+  
+  response <- VERB("GET", url, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+  
+  n <- fromJSON(rawToChar(response$content))$meta$total_pages[[1]]
+  return(n)
+}
+```
+<br>
+The `team_stats()` function is similar to the `player_stats()` except I'll be querying the `Games` endpoint. The function requires a team name, season, and an optional postseason logical argument. The postseason default argument is set to `FALSE`, so if the user omits the argument, the query will return regular season data only. Team name and season are required arguments to speed up the query return time. It would be possible, if the user wanted, to pull data from every NBA game for every season, but I thought for the purposes of this assignment that the results would be too large.
+```{r team_stats}
+team_stats <- function(team, season, postseason = FALSE){
+  id <- get_team_id(team)
+  n <- page_num_team(team, season, postseason)
+  team_stats <- data.frame()
+  
+  for(i in 1:n){
+    url <- paste0("https://free-nba.p.rapidapi.com/games?seasons[]=", season, "&team_ids[]=", id, "&postseason=", postseason)
+    
+    queryString <- list(
+      page = i,
+      per_page = "25"
+    )
+    
+    response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
+    
+    temp <- fromJSON(rawToChar(response$content))$data
+    attributes(temp$home_team)$names[1] <- "hometeamid"
+    temp <- bind_cols(temp %>% select(-home_team), temp$home_team)
+    attributes(temp)$names[12:17] <- c("home_team_id", "home_team_city", "home_team_conf", "home_team_div", "home_team", "home_team_name")
+    attributes(temp$visitor_team)$names[1] <- "visitorteamid"
+    temp <- bind_cols(temp %>% select(-visitor_team), temp$visitor_team)
+    attributes(temp)$names[18:23] <- c("visitor_team_id", "visitor_team_city", "visitor_team_conf", "visitor_team_div", "visitor_team", "visitor_team_name")
+    
+    temp <- temp %>% select("date", "postseason", "season", "home_team_id", "home_team_city", "home_team_conf", "home_team_div", "home_team_name", "home_team_score", "visitor_team_id", "visitor_team_city", "visitor_team_conf", "visitor_team_div", "visitor_team_name", "visitor_team_score")
+    
+    team_stats <- rbind(team_stats, temp)
+  }
+
+  return(team_stats)
+}
+```
+The `for loop` and `bind_cols()` work exactly the same as they did in `player_stats()`.
+<br>
+
+## EDA  
+
+As a longtime San Antonio Spurs fan, one my favorite seasons to remember was the 2013-2014 season. The prior season had seen the Spurs return to the Finals against the Miami Heat only to lose what would have been their Finals clinching game with less than 20 seconds on the clock. Crestfallen at the loss, they would go on to lose the succeeding game seven. Many thought it was the end of the Tim Duncan era. But in the following 2013-2014 season, the Spurs would go on to have one of the most dominating regular and postseason runs, culminating in a repeat of the previous year's finals and defeating the Miami Heat and the all-star starting trio of Lebron James, Dwayne Wade, and Chris Bosch in five games.  
+
+First off, let's see what the Spurs regular season win/loss record was for that year. And then let's see if their record varied at all depending on if they played at home. We'll also want to see how they matched up against different divisions.  
+
+Let's pull in the Spurs 2013 game stats and inspect the structure.
+```{r spurs_2013}
+spurs_2013_r <- team_stats("Spurs", 2013)
+str(spurs_2013_r)
+```
+Looking at the structure, we can see that there is no Win/Loss variable so we'll need to create that first. To do so, I'll create a `W_L` column and run `if_else()` to determine if the column should be populated with a `W` or `L`. I'll use logical operators to determine if the Spurs won or lost.
+```{r add_W_L}
+spurs_2013_r <- spurs_2013_r %>%
+  mutate(W_L = if_else(home_team_id == "SAS" & home_team_score > visitor_team_score, "W", 
+                       if_else(visitor_team_id == "SAS" & visitor_team_score > home_team_score, "W", "L")))
+```
+Now I'll run a very simple contingency table to get the season win/loss record.
+```{r win_loss}
+table(spurs_2013_r$W_L)
+```
+The Spurs won 75% of all their regular season games - that's a great season!  
+
+Now let's see how they played against the different divisions. Recall that the structure of the API output does have home and visitor team information, including confernce and division. The problem with this structure is that the Spurs were both home and visiting team throughout the season. So I'll need to manipulate the data in a way that will isolate the Spurs as either the home or visiting team and relabel the opposing teams as `opponent`. I did this by splitting the `spurs_2013_r` object in two - one in which the Spurs occupy only the `home_team` column and another in which the Spurs only occupy the `visitor_team` column. From there, I can rename the columns appropriately and then recombine the objects back into a single dataframe using `rbind()`.
+```{r create_opponent}
+spurs_2013_home <- spurs_2013_r %>% filter(visitor_team_id != "SAS") %>% mutate(location = "home")%>% select(date, visitor_team_id, visitor_team_conf, visitor_team_div, visitor_team_score, home_team_id, home_team_score, W_L, location) %>% rename(opponent = visitor_team_id, opponent_conf = visitor_team_conf, opponent_div = visitor_team_div, opponent_score = visitor_team_score, SA = home_team_id, spurs_score = home_team_score)
+
+spurs_2013_away <- spurs_2013_r %>% filter(home_team_id != "SAS") %>% mutate(location = "away")%>% select(date, home_team_id, home_team_conf, home_team_div, home_team_score, visitor_team_id, visitor_team_score, W_L, location) %>% rename(opponent = home_team_id, opponent_conf = home_team_conf, opponent_div = home_team_div, opponent_score = home_team_score, SA = visitor_team_id, spurs_score = visitor_team_score)
+
+spurs_2013_regular <- rbind(spurs_2013_home, spurs_2013_away)
+```
+I also added another categorical variable, `location` that will be useful for analysis. Now let's see how the Spurs record looks when split across different variables.
+```{r contigency}
+table(spurs_2013_regular$W_L, spurs_2013_regular$opponent_div)
+```
+The highest winning percentage by division is the Southeast - that's Miami's division.
+```{r contingency_}
+table(spurs_2013_regular$W_L, spurs_2013_regular$opponent)
+```
+But it looks like the Spurs split their regular season games with the Heat.
+```{r contingency_3way}
+table(spurs_2013_regular$W_L, spurs_2013_regular$opponent_div, spurs_2013_regular$location)
+```
+And it looks like they lost that Heat game in Miami. So home court advantage in the playoffs might be important.  
+
+Now let's take a look at the Spurs W/L record in relation to how many points they scored.
+```{r histogram}
+g <- ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L))
+g + geom_histogram(position = "dodge", binwidth=1) +
+  labs(x = "Spurs Score", y = "Frequency", title = "Final Regular Season Scores by Win/Loss 2013-2014", fill = "W/L")
+```
+It looks like if the Spurs score over 100 pts in a game, they will be pretty hard to beat.  
+
+Now let's take a look at how the Spurs perennial All-Star, Tim Duncan, performed during this season and see if there is any connection between his performance and the team's W/L record.  
+
+Let's first pull in Tim Duncan's data for the 2013-2014 season.
+```{r timmy_stats}
+timmy <- player_stats("duncan", "tim", 2013)
+str(timmy)
+```
+Inspect the `str()` to make sure the correct data was pulled.  
+
+Now we'll want to join Tim's record to the Spurs regular season record. We can do this by merging on the `date` column since the date in both dataframes is the date both the Spurs and Tim played.
+```{r tim_spurs_merge}
+timmy_2013_team <- merge(timmy, spurs_2013_regular, by = "date")
+str(timmy_2013_team)
+```
+Again, we'll inspect the `str()` to make sure the data looks correct. Now we have a table with both Tim's individual stats and the game data.  
+
+
