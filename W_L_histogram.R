@@ -4,8 +4,9 @@
 #str(spurs_2013_ps)
 #spurs_2013_ps <- spurs_2013_ps %>% filter(home_team_id == "MIA" | visitor_team_id == "MIA")
 timmy <- player_stats("duncan", "tim", 2013)
-#timmy_career_ <- player_stats("duncan", "tim")
-#timmy_career <- timmy_career_ %>% drop_na(pts, reb) %>% group_by(season) %>% summarize(points = mean(pts), rebounds = mean(reb))
+str(timmy)
+timmy_career_ <- player_stats("duncan", "tim")
+timmy_career <- timmy_career_ %>% drop_na(pts, reb) %>% group_by(season) %>% summarize(points = mean(pts), rebounds = mean(reb))
 
 timmy_2013_team <- merge(timmy, spurs_2013_regular, by = "date")
 str(timmy_2013_team)
