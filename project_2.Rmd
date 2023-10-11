@@ -9,13 +9,13 @@ output: github_document
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, error = FALSE)
 ```
 
-## Summary  
+# Summary  
 
 This project encompasses querying data from an API and manipulating the results to produce some insightful EDA's.
 
 I chose the basketball API [Free NBA](https://rapidapi.com/theapiguy/api/free-nba) from [rapidapi](https://rapidapi.com) because I thought it would be interesting to compare player and team information in a way that gave the user more control than traditional basketball reference websites. As we will see, this did provide some interesting and frustrating results.  
 
-## Required Packages  
+# Required Packages  
 
 Here is a list of the packages that were used in this project.
 
@@ -31,7 +31,7 @@ library(gifski)
 library(png)
 ```
 
-## Query API  
+# Query API  
 
 My plan for the API query was to create a call that would allow the user to pull player and game data. For the player data, I would allow the user to select a specific player and season to collect data on or they could collect data on a player's entire career. For the game data, I wanted to allow the user to select the team, season, and specify whether they wanted regular or postseason data.  
 
@@ -47,7 +47,7 @@ The first issue is that the Free NBA API appears to be designed for websites or 
 
 The second issue was that the parameter options provided by the API were not very helpful. Specific players or teams could be searched for if one had the `player_id` or `team_id` - both of which were numeric keys that had no immediate reference.  
 
-### Player Stats  
+## Player Stats  
 
 The first step to creating the `player_stats()` query was to write a small function that could take in the player's name and return the `player_id` to be used in the `Stats` endpoint.
 
@@ -206,7 +206,7 @@ player_stats <- function(last_name, first_name = "", year = 'career'){
 }
 ```
 <br>
-### Team Stats  
+## Team Stats  
 
 The team stats info resides in the `Games` API endpoint, so the first step is to create a function that will retrieve the `team_id` based on the team name entered.
 ```{r team_id}
@@ -281,7 +281,7 @@ team_stats <- function(team, season, postseason = FALSE){
 The `for loop` and `bind_cols()` work exactly the same as they did in `player_stats()`.
 <br>
 
-## EDA  
+# EDA  
 
 As a longtime San Antonio Spurs fan, one my favorite seasons to remember was the 2013-2014 season. The prior season had seen the Spurs return to the Finals against the Miami Heat only to lose what would have been their Finals clinching game with less than 20 seconds on the clock. Crestfallen at the loss, they would go on to lose the succeeding game seven. Many thought it was the end of the Tim Duncan era. But in the following 2013-2014 season, the Spurs would go on to have one of the most dominating regular and postseason runs, culminating in a repeat of the previous year's finals and defeating the Miami Heat and the all-star starting trio of Lebron James, Dwayne Wade, and Chris Bosch in five games.  
 
@@ -328,10 +328,11 @@ And it looks like they lost that Heat game in Miami. So home court advantage in 
 
 Now let's take a look at the Spurs W/L record in relation to how many points they scored.
 ```{r histogram}
-g <- ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L))
-g + geom_histogram(position = "dodge", binwidth=1) +
+ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L)) + 
+  geom_histogram(position = "dodge", binwidth=1) +
   labs(x = "Spurs Score", y = "Frequency", title = "Final Regular Season Scores by Win/Loss 2013-2014", fill = "W/L")
 ```
+<br>
 It looks like if the Spurs score over 100 pts in a game, they will be pretty hard to beat.  
 
 Now let's take a look at how the Spurs perennial All-Star, Tim Duncan, performed during this season and see if there is any connection between his performance and the team's W/L record.  
@@ -341,6 +342,7 @@ Let's first pull in Tim Duncan's data for the 2013-2014 season.
 timmy <- player_stats("duncan", "tim", 2013)
 str(timmy)
 ```
+<br>
 Inspect the `str()` to make sure the correct data was pulled.  
 
 Now we'll want to join Tim's record to the Spurs regular season record. We can do this by merging on the `date` column since the date in both dataframes is the date both the Spurs and Tim played.
@@ -348,30 +350,34 @@ Now we'll want to join Tim's record to the Spurs regular season record. We can d
 timmy_2013_team <- merge(timmy, spurs_2013_regular, by = "date")
 str(timmy_2013_team)
 ```
+<br>
 Again, we'll inspect the `str()` to make sure the data looks correct. Now we have a table with both Tim's individual stats and the game data.  
 
 Let's see if Tim Duncan's point totals for games relates to the Spurs W/L record.
 ```{r box}
-g <- ggplot(timmy_2013_team, aes(x = W_L, y = pts))
-g + geom_boxplot(fill = 'grey') +
+ggplot(timmy_2013_team, aes(x = W_L, y = pts)) +
+  geom_boxplot(fill = 'grey') +
   labs(x = "Win/Loss", y = "points", title = "Tim Duncan Points by Win/Loss 2013-2014")
 ```
+<br>
 It does look like Tim is averaging over 15 points per game for Wins and less than 15 points per game for losses.  
 
 It should be noted that Tim Duncan is more than just a scorer. As a power forward he can have a dominating defensive presence in the paint, a stat that can be reflected in rebounds. So let's take a look at Tim's points and rebounds totals across his opponents divisions and the Spurs W/L record.
 ```{r pts_reb_div}
-g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
-g + geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
+ggplot(timmy_2013_team, aes(x = pts, y = reb))+ 
+  geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
   labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds vs division 2013-2014") + guides(color = guide_legend(title = "division")) + facet_wrap(~ W_L)
 ```
+<br>
 Looks like Tim had a really poor rebounding effort in a loss against a Southeast team. If you'll recall, the Spurs went 9-1 against the Southeast, losing only to Miami. So it appears that Tim would need to be a more defensive presence on the court if the Spurs are to get past Miami.  
 
 Let's see if Tim's performance is affected in way by the location of the game.
 ```{r location}
-g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
-g + geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
+ggplot(timmy_2013_team, aes(x = pts, y = reb)) + 
+  geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
   labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds by location 2013-2014") + guides(color = guide_legend(title = "location")) + facet_wrap(~ opponent_div)
 ```
+<br>
 Except for one game, it appears Tim was not at his best at away games in the Central division.  
 
 Finally, as a long time Tim Duncan fan, I'd like to take a look at his averages in points and rebounds and see how they have changed through his career. So let's pull Tim's career stats, find the mean of his points and rebounds by season, and animate them in a point plot.
@@ -385,4 +391,5 @@ ggplot(timmy_career, aes(points, rebounds)) +
   transition_time(season) +
   ease_aes("linear")
 ```
+<br>
 Note that Tim's career spans 18 years and that for the majority of those years, his points and rebounds exceed 15pt/10reb. Consistency of excellence! Tim Duncan 5-EVA! ('cuz 4-eva is too short) 

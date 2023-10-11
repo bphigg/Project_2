@@ -1,4 +1,9 @@
-## 0.1 Summary
+-   [1 Summary](#summary)
+-   [2 Required Packages](#required-packages)
+-   [3 Query API](#query-api)
+-   [4 EDA](#eda)
+
+# 1 Summary
 
 This project encompasses querying data from an API and manipulating the
 results to produce some insightful EDA’s.
@@ -10,7 +15,7 @@ interesting to compare player and team information in a way that gave
 the user more control than traditional basketball reference websites. As
 we will see, this did provide some interesting and frustrating results.
 
-## 0.2 Required Packages
+# 2 Required Packages
 
 Here is a list of the packages that were used in this project.
 
@@ -24,7 +29,7 @@ Here is a list of the packages that were used in this project.
     library(gifski)
     library(png)
 
-## 0.3 Query API
+# 3 Query API
 
 My plan for the API query was to create a call that would allow the user
 to pull player and game data. For the player data, I would allow the
@@ -59,7 +64,7 @@ not very helpful. Specific players or teams could be searched for if one
 had the `player_id` or `team_id` - both of which were numeric keys that
 had no immediate reference.
 
-### 0.3.1 Player Stats
+## 3.1 Player Stats
 
 The first step to creating the `player_stats()` query was to write a
 small function that could take in the player’s name and return the
@@ -271,7 +276,7 @@ results:
       }
     }
 
-<br> \### Team Stats
+<br> \## Team Stats
 
 The team stats info resides in the `Games` API endpoint, so the first
 step is to create a function that will retrieve the `team_id` based on
@@ -360,7 +365,7 @@ the results would be too large.
 The `for loop` and `bind_cols()` work exactly the same as they did in
 `player_stats()`. <br>
 
-## 0.4 EDA
+# 4 EDA
 
 As a longtime San Antonio Spurs fan, one my favorite seasons to remember
 was the 2013-2014 season. The prior season had seen the Spurs return to
@@ -491,13 +496,13 @@ advantage in the playoffs might be important.
 Now let’s take a look at the Spurs W/L record in relation to how many
 points they scored.
 
-    g <- ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L))
-    g + geom_histogram(position = "dodge", binwidth=1) +
+    ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L)) + 
+      geom_histogram(position = "dodge", binwidth=1) +
       labs(x = "Spurs Score", y = "Frequency", title = "Final Regular Season Scores by Win/Loss 2013-2014", fill = "W/L")
 
 ![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/histogram-1.png)
-It looks like if the Spurs score over 100 pts in a game, they will be
-pretty hard to beat.
+<br> It looks like if the Spurs score over 100 pts in a game, they will
+be pretty hard to beat.
 
 Now let’s take a look at how the Spurs perennial All-Star, Tim Duncan,
 performed during this season and see if there is any connection between
@@ -526,7 +531,7 @@ Let’s first pull in Tim Duncan’s data for the 2013-2014 season.
     ##  $ reb               : int  6 7 8 5 4 10 NA 8 8 9 ...
     ##  $ stl               : int  0 0 0 0 1 0 NA 0 1 0 ...
 
-Inspect the `str()` to make sure the correct data was pulled.
+<br> Inspect the `str()` to make sure the correct data was pulled.
 
 Now we’ll want to join Tim’s record to the Spurs regular season record.
 We can do this by merging on the `date` column since the date in both
@@ -561,19 +566,20 @@ dataframes is the date both the Spurs and Tim played.
     ##  $ W_L               : chr  "W" "L" "W" "W" ...
     ##  $ location          : chr  "home" "away" "away" "home" ...
 
-Again, we’ll inspect the `str()` to make sure the data looks correct.
-Now we have a table with both Tim’s individual stats and the game data.
+<br> Again, we’ll inspect the `str()` to make sure the data looks
+correct. Now we have a table with both Tim’s individual stats and the
+game data.
 
 Let’s see if Tim Duncan’s point totals for games relates to the Spurs
 W/L record.
 
-    g <- ggplot(timmy_2013_team, aes(x = W_L, y = pts))
-    g + geom_boxplot(fill = 'grey') +
+    ggplot(timmy_2013_team, aes(x = W_L, y = pts)) +
+      geom_boxplot(fill = 'grey') +
       labs(x = "Win/Loss", y = "points", title = "Tim Duncan Points by Win/Loss 2013-2014")
 
 ![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/box-1.png)
-It does look like Tim is averaging over 15 points per game for Wins and
-less than 15 points per game for losses.
+<br> It does look like Tim is averaging over 15 points per game for Wins
+and less than 15 points per game for losses.
 
 It should be noted that Tim Duncan is more than just a scorer. As a
 power forward he can have a dominating defensive presence in the paint,
@@ -581,27 +587,27 @@ a stat that can be reflected in rebounds. So let’s take a look at Tim’s
 points and rebounds totals across his opponents divisions and the Spurs
 W/L record.
 
-    g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
-    g + geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
+    ggplot(timmy_2013_team, aes(x = pts, y = reb))+ 
+      geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
       labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds vs division 2013-2014") + guides(color = guide_legend(title = "division")) + facet_wrap(~ W_L)
 
 ![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/pts_reb_div-1.png)
-Looks like Tim had a really poor rebounding effort in a loss against a
-Southeast team. If you’ll recall, the Spurs went 9-1 against the
-Southeast, losing only to Miami. So it appears that Tim would need to be
-a more defensive presence on the court if the Spurs are to get past
-Miami.
+<br> Looks like Tim had a really poor rebounding effort in a loss
+against a Southeast team. If you’ll recall, the Spurs went 9-1 against
+the Southeast, losing only to Miami. So it appears that Tim would need
+to be a more defensive presence on the court if the Spurs are to get
+past Miami.
 
 Let’s see if Tim’s performance is affected in way by the location of the
 game.
 
-    g <- ggplot(timmy_2013_team, aes(x = pts, y = reb))
-    g + geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
+    ggplot(timmy_2013_team, aes(x = pts, y = reb)) + 
+      geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
       labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds by location 2013-2014") + guides(color = guide_legend(title = "location")) + facet_wrap(~ opponent_div)
 
 ![](/Users/brianhigginbotham/R/Project_2/README_files/figure-markdown_strict/location-1.png)
-Except for one game, it appears Tim was not at his best at away games in
-the Central division.
+<br> Except for one game, it appears Tim was not at his best at away
+games in the Central division.
 
 Finally, as a long time Tim Duncan fan, I’d like to take a look at his
 averages in points and rebounds and see how they have changed through
@@ -617,9 +623,9 @@ points and rebounds by season, and animate them in a point plot.
       transition_time(season) +
       ease_aes("linear")
 
-    ## Rendering [=====>--------------------------------------------------------------------] at 36 fps ~ eta:  3sRendering [======>-------------------------------------------------------------------] at 36 fps ~ eta:  3sRendering [======>-------------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [=======>------------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [========>-----------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [=========>----------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [==========>---------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [===========>--------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [============>-------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [============>-------------------------------------------------------------] at 38 fps ~ eta:  2sRendering [=============>------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [==============>-----------------------------------------------------------] at 37 fps ~ eta:  2sRendering [===============>----------------------------------------------------------] at 38 fps ~ eta:  2sRendering [===============>----------------------------------------------------------] at 37 fps ~ eta:  2sRendering [================>---------------------------------------------------------] at 38 fps ~ eta:  2sRendering [=================>--------------------------------------------------------] at 38 fps ~ eta:  2sRendering [==================>-------------------------------------------------------] at 38 fps ~ eta:  2sRendering [===================>------------------------------------------------------] at 38 fps ~ eta:  2sRendering [====================>-----------------------------------------------------] at 38 fps ~ eta:  2sRendering [=====================>----------------------------------------------------] at 38 fps ~ eta:  2sRendering [======================>---------------------------------------------------] at 38 fps ~ eta:  2sRendering [=======================>--------------------------------------------------] at 38 fps ~ eta:  2sRendering [========================>-------------------------------------------------] at 38 fps ~ eta:  2sRendering [=========================>------------------------------------------------] at 38 fps ~ eta:  2sRendering [==========================>-----------------------------------------------] at 38 fps ~ eta:  2sRendering [===========================>----------------------------------------------] at 38 fps ~ eta:  2sRendering [============================>---------------------------------------------] at 38 fps ~ eta:  2sRendering [=============================>--------------------------------------------] at 38 fps ~ eta:  2sRendering [==============================>-------------------------------------------] at 38 fps ~ eta:  2sRendering [===============================>------------------------------------------] at 38 fps ~ eta:  2sRendering [================================>-----------------------------------------] at 38 fps ~ eta:  1sRendering [=================================>----------------------------------------] at 38 fps ~ eta:  1sRendering [==================================>---------------------------------------] at 38 fps ~ eta:  1sRendering [===================================>--------------------------------------] at 38 fps ~ eta:  1sRendering [====================================>-------------------------------------] at 38 fps ~ eta:  1sRendering [=====================================>------------------------------------] at 38 fps ~ eta:  1sRendering [======================================>-----------------------------------] at 38 fps ~ eta:  1sRendering [=======================================>----------------------------------] at 38 fps ~ eta:  1sRendering [========================================>---------------------------------] at 38 fps ~ eta:  1sRendering [=========================================>--------------------------------] at 38 fps ~ eta:  1sRendering [==========================================>-------------------------------] at 38 fps ~ eta:  1sRendering [===========================================>------------------------------] at 38 fps ~ eta:  1sRendering [============================================>-----------------------------] at 38 fps ~ eta:  1sRendering [=============================================>----------------------------] at 38 fps ~ eta:  1sRendering [==============================================>---------------------------] at 38 fps ~ eta:  1sRendering [===============================================>--------------------------] at 38 fps ~ eta:  1sRendering [================================================>-------------------------] at 38 fps ~ eta:  1sRendering [=================================================>------------------------] at 38 fps ~ eta:  1sRendering [==================================================>-----------------------] at 38 fps ~ eta:  1sRendering [===================================================>----------------------] at 38 fps ~ eta:  1sRendering [====================================================>---------------------] at 38 fps ~ eta:  1sRendering [=====================================================>--------------------] at 38 fps ~ eta:  1sRendering [======================================================>-------------------] at 38 fps ~ eta:  1sRendering [=======================================================>------------------] at 38 fps ~ eta:  1sRendering [========================================================>-----------------] at 38 fps ~ eta:  1sRendering [=========================================================>----------------] at 38 fps ~ eta:  1sRendering [==========================================================>---------------] at 38 fps ~ eta:  1sRendering [===========================================================>--------------] at 38 fps ~ eta:  1sRendering [============================================================>-------------] at 38 fps ~ eta:  0sRendering [=============================================================>------------] at 38 fps ~ eta:  0sRendering [==============================================================>-----------] at 38 fps ~ eta:  0sRendering [===============================================================>----------] at 38 fps ~ eta:  0sRendering [================================================================>---------] at 38 fps ~ eta:  0sRendering [=================================================================>--------] at 38 fps ~ eta:  0sRendering [==================================================================>-------] at 38 fps ~ eta:  0sRendering [===================================================================>------] at 38 fps ~ eta:  0sRendering [====================================================================>-----] at 38 fps ~ eta:  0sRendering [=====================================================================>----] at 38 fps ~ eta:  0sRendering [======================================================================>---] at 38 fps ~ eta:  0sRendering [=======================================================================>--] at 38 fps ~ eta:  0sRendering [========================================================================>-] at 38 fps ~ eta:  0sRendering [==========================================================================] at 38 fps ~ eta:  0s                                                                                                           
+    ## Rendering [=====>--------------------------------------------------------------------] at 38 fps ~ eta:  2sRendering [======>-------------------------------------------------------------------] at 38 fps ~ eta:  2sRendering [======>-------------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [=======>------------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [========>-----------------------------------------------------------------] at 38 fps ~ eta:  2sRendering [=========>----------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [==========>---------------------------------------------------------------] at 38 fps ~ eta:  2sRendering [===========>--------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [============>-------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [=============>------------------------------------------------------------] at 37 fps ~ eta:  2sRendering [==============>-----------------------------------------------------------] at 37 fps ~ eta:  2sRendering [===============>----------------------------------------------------------] at 37 fps ~ eta:  2sRendering [================>---------------------------------------------------------] at 32 fps ~ eta:  2sRendering [=================>--------------------------------------------------------] at 32 fps ~ eta:  2sRendering [==================>-------------------------------------------------------] at 33 fps ~ eta:  2sRendering [===================>------------------------------------------------------] at 33 fps ~ eta:  2sRendering [====================>-----------------------------------------------------] at 33 fps ~ eta:  2sRendering [=====================>----------------------------------------------------] at 33 fps ~ eta:  2sRendering [======================>---------------------------------------------------] at 34 fps ~ eta:  2sRendering [=======================>--------------------------------------------------] at 34 fps ~ eta:  2sRendering [========================>-------------------------------------------------] at 34 fps ~ eta:  2sRendering [=========================>------------------------------------------------] at 34 fps ~ eta:  2sRendering [==========================>-----------------------------------------------] at 35 fps ~ eta:  2sRendering [===========================>----------------------------------------------] at 35 fps ~ eta:  2sRendering [============================>---------------------------------------------] at 35 fps ~ eta:  2sRendering [=============================>--------------------------------------------] at 35 fps ~ eta:  2sRendering [==============================>-------------------------------------------] at 35 fps ~ eta:  2sRendering [===============================>------------------------------------------] at 35 fps ~ eta:  2sRendering [================================>-----------------------------------------] at 36 fps ~ eta:  2sRendering [================================>-----------------------------------------] at 35 fps ~ eta:  2sRendering [=================================>----------------------------------------] at 35 fps ~ eta:  2sRendering [==================================>---------------------------------------] at 35 fps ~ eta:  1sRendering [===================================>--------------------------------------] at 36 fps ~ eta:  1sRendering [====================================>-------------------------------------] at 36 fps ~ eta:  1sRendering [=====================================>------------------------------------] at 36 fps ~ eta:  1sRendering [======================================>-----------------------------------] at 36 fps ~ eta:  1sRendering [=======================================>----------------------------------] at 36 fps ~ eta:  1sRendering [========================================>---------------------------------] at 36 fps ~ eta:  1sRendering [=========================================>--------------------------------] at 36 fps ~ eta:  1sRendering [==========================================>-------------------------------] at 36 fps ~ eta:  1sRendering [===========================================>------------------------------] at 36 fps ~ eta:  1sRendering [============================================>-----------------------------] at 36 fps ~ eta:  1sRendering [=============================================>----------------------------] at 37 fps ~ eta:  1sRendering [==============================================>---------------------------] at 37 fps ~ eta:  1sRendering [===============================================>--------------------------] at 37 fps ~ eta:  1sRendering [================================================>-------------------------] at 37 fps ~ eta:  1sRendering [=================================================>------------------------] at 37 fps ~ eta:  1sRendering [==================================================>-----------------------] at 37 fps ~ eta:  1sRendering [===================================================>----------------------] at 37 fps ~ eta:  1sRendering [====================================================>---------------------] at 37 fps ~ eta:  1sRendering [=====================================================>--------------------] at 37 fps ~ eta:  1sRendering [======================================================>-------------------] at 37 fps ~ eta:  1sRendering [=======================================================>------------------] at 37 fps ~ eta:  1sRendering [========================================================>-----------------] at 37 fps ~ eta:  1sRendering [=========================================================>----------------] at 37 fps ~ eta:  1sRendering [==========================================================>---------------] at 37 fps ~ eta:  1sRendering [===========================================================>--------------] at 37 fps ~ eta:  1sRendering [============================================================>-------------] at 37 fps ~ eta:  0sRendering [=============================================================>------------] at 37 fps ~ eta:  0sRendering [==============================================================>-----------] at 38 fps ~ eta:  0sRendering [===============================================================>----------] at 37 fps ~ eta:  0sRendering [===============================================================>----------] at 38 fps ~ eta:  0sRendering [================================================================>---------] at 38 fps ~ eta:  0sRendering [=================================================================>--------] at 38 fps ~ eta:  0sRendering [==================================================================>-------] at 38 fps ~ eta:  0sRendering [===================================================================>------] at 38 fps ~ eta:  0sRendering [====================================================================>-----] at 38 fps ~ eta:  0sRendering [=====================================================================>----] at 38 fps ~ eta:  0sRendering [======================================================================>---] at 38 fps ~ eta:  0sRendering [=======================================================================>--] at 38 fps ~ eta:  0sRendering [========================================================================>-] at 38 fps ~ eta:  0sRendering [==========================================================================] at 38 fps ~ eta:  0s                                                                                                           
 
-![](README_files/figure-markdown_strict/animate_plot-1.gif) Note that
-Tim’s career spans 18 years and that for the majority of those years,
-his points and rebounds exceed 15pt/10reb. Consistency of excellence!
-Tim Duncan 5-EVA! (’cuz 4-eva is too short)
+![](README_files/figure-markdown_strict/animate_plot-1.gif) <br> Note
+that Tim’s career spans 18 years and that for the majority of those
+years, his points and rebounds exceed 15pt/10reb. Consistency of
+excellence! Tim Duncan 5-EVA! (’cuz 4-eva is too short)
