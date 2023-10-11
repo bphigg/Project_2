@@ -20,8 +20,5 @@ parsed <- bind_cols(parsed %>% select(-team), parsed$team)
 parsed <- bind_cols(parsed %>% select(-game), parsed$game)
 parsed <- bind_cols(parsed %>% select(-player), parsed$player)
 str(parsed)
-head(parsed)
-parsed$data
-parsed <- parsed$data
-str(parsed)
-parsed
+parsed[14]
+

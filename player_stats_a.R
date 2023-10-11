@@ -11,6 +11,7 @@ player_id <- function(last_name, first_name = ""){
   response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
   
   id <- fromJSON(rawToChar(response$content))$data
+  attributes(id$team)$names[1] <- "team_id"
   id <- bind_cols(id %>% select(-team), id$team)
   attributes(id)$names[1] <- "player_id"
   attributes(id)$names[8] <- "team_id"

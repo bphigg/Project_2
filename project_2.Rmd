@@ -130,8 +130,11 @@ player_stats_year <- function(last_name, first_name = "", year){
     response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
     
     temp <- fromJSON(rawToChar(response$content))$data
+    attributes(temp$team)$names[1] <- "teamid"
     temp <- bind_cols(temp %>% select(-team), temp$team)
+    attributes(temp$game)$names[1] <- "gameid"
     temp <- bind_cols(temp %>% select(-game), temp$game)
+    attributes(temp$player)$names[1] <- "playerid"
     temp <- bind_cols(temp %>% select(-player), temp$player)
     
     temp <- temp %>% select("first_name", "last_name", "abbreviation", "date", "season", "home_team_id", "home_team_score", "visitor_team_id", "visitor_team_score", "ast", "blk", "min", "pf", "pts", "reb", "stl")
@@ -146,7 +149,12 @@ player_stats_year <- function(last_name, first_name = "", year){
 ```
 After the `player_id()` and `page_num()` functions, I've initiated the empty dataframe `stats`. This is where I'll collect my pages of data from the `for loop`.  Next is the `for loop` in which I'll iterate the API call 1:n times, with each time being a successive page number. This is reflected in the `queryString` as page = i.  
 
-After I collected the `response`, things got a little tricky. Initially, the `for loop` did not work because each successive page had the same index (1:25) and so it was throwing an error about rows already existing. So I decided the best way around this was to go ahead and select the relevant columns before it executed `rbind()`. However, this led to another issue - the returned `$data` data frame had subsetted data frames. Essentially, all the relevant Player, Team, and Game information from the API call were subsetted data frames. So in order to bring those subsetted data frames up to a column level that can be `selected()`, I used `bind_cols()`. I'm not sure if this was the best way to go about it, but it did work.  
+After I collected the `response`, things got a little tricky. Initially, the `for loop` did not work because each successive page had the same index (1:25) and so it was throwing an error about rows already existing. So I decided the best way around this was to go ahead and select the relevant columns before it executed `rbind()`. However, this led to another issue - the returned `$data` data frame had subsetted data frames. Essentially, all the relevant Player, Team, and Game information from the API call were subsetted data frames. So in order to bring those subsetted data frames up to a column level that can be `selected()`, I used `bind_cols()`.  
+
+Before executing `bind_cols()`, I had to rename the `id` column for each subsetted dataframe. Without this step, the function would return "rename notifications" regarding the `id` columns for each `bind_cols` on every page of the `for loop`.Essentially, the returned dataframe as well as the subsetted dataframes each have their own `id` column (`temp$id`, `game$id`, `team$id`, `player$id`). When `bind_cols()` is called, it pulls the subsetted dataframe columns up to the "primary" dataframe. In doing so, it drops the subsetted dataframe name and "attaches" the column name to the "primary" dataframe. So the `temp` dataframe then has multiple columns named `id`. R would automatically rename these columns (`id...1`, `id...18`, etc,) based on their position in the dataframe. In doing so, it would return a notification in the console.  For some function calls, it would return 180 -200 notifications.  
+
+It would be worth noting that the functions did work even with the "rename notifications". But since they were part of the return, I thought it would be a good idea to figure out a way to prevent it. I'm not sure if this was the best way to go about it, but it did work.  
+
 Finally, there were two different ways the `min` data was recorded - as an integer and in ms format (mm:ss). After some unsuccessful trials with `lubridate()` to get these two different formats uniform, I decided the seconds portion of the `min` variable was kind of unnecessary. So I removed the seconds portion and converted the entire column to numeric so it could be aggregated.  
 
 I have a very similar function for the Player Stats by Career query. Exactly like the `page_num_career()` function, it simply has a modified URL.
@@ -167,8 +175,11 @@ player_stats_career <- function(last_name, first_name = ""){
     response <- VERB("GET", url, query = queryString, add_headers('X-RapidAPI-Key' = '3009c8c91amsh65cad163db7085ap15d3d2jsnad2333f55e76', 'X-RapidAPI-Host' = 'free-nba.p.rapidapi.com'), content_type("application/octet-stream"))
     
     temp <- fromJSON(rawToChar(response$content))$data
+    attributes(temp$team)$names[1] <- "teamid"
     temp <- bind_cols(temp %>% select(-team), temp$team)
+    attributes(temp$game)$names[1] <- "gameid"
     temp <- bind_cols(temp %>% select(-game), temp$game)
+    attributes(temp$player)$names[1] <- "playerid"
     temp <- bind_cols(temp %>% select(-player), temp$player)
     
     temp <- temp %>% select("first_name", "last_name", "abbreviation", "date", "season", "home_team_id", "home_team_score", "visitor_team_id", "visitor_team_score", "ast", "blk", "min", "pf", "pts", "reb", "stl")
