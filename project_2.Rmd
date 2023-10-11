@@ -328,9 +328,10 @@ And it looks like they lost that Heat game in Miami. So home court advantage in 
 
 Now let's take a look at the Spurs W/L record in relation to how many points they scored.
 ```{r histogram}
-ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L)) + 
+a <- ggplot(spurs_2013_regular, aes(x=spurs_score, fill = W_L)) + 
   geom_histogram(position = "dodge", binwidth=1) +
   labs(x = "Spurs Score", y = "Frequency", title = "Final Regular Season Scores by Win/Loss 2013-2014", fill = "W/L")
+a
 ```
 <br>
 It looks like if the Spurs score over 100 pts in a game, they will be pretty hard to beat.  
@@ -355,27 +356,30 @@ Again, we'll inspect the `str()` to make sure the data looks correct. Now we hav
 
 Let's see if Tim Duncan's point totals for games relates to the Spurs W/L record.
 ```{r box}
-ggplot(timmy_2013_team, aes(x = W_L, y = pts)) +
+b <- ggplot(timmy_2013_team, aes(x = W_L, y = pts)) +
   geom_boxplot(fill = 'grey') +
   labs(x = "Win/Loss", y = "points", title = "Tim Duncan Points by Win/Loss 2013-2014")
+b
 ```
 <br>
 It does look like Tim is averaging over 15 points per game for Wins and less than 15 points per game for losses.  
 
 It should be noted that Tim Duncan is more than just a scorer. As a power forward he can have a dominating defensive presence in the paint, a stat that can be reflected in rebounds. So let's take a look at Tim's points and rebounds totals across his opponents divisions and the Spurs W/L record.
 ```{r pts_reb_div}
-ggplot(timmy_2013_team, aes(x = pts, y = reb))+ 
+c <- ggplot(timmy_2013_team, aes(x = pts, y = reb))+ 
   geom_point(aes(colour = opponent_div), alpha = 0.5, position = "jitter") +
   labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds vs division 2013-2014") + guides(color = guide_legend(title = "division")) + facet_wrap(~ W_L)
+c
 ```
 <br>
 Looks like Tim had a really poor rebounding effort in a loss against a Southeast team. If you'll recall, the Spurs went 9-1 against the Southeast, losing only to Miami. So it appears that Tim would need to be a more defensive presence on the court if the Spurs are to get past Miami.  
 
 Let's see if Tim's performance is affected in way by the location of the game.
 ```{r location}
-ggplot(timmy_2013_team, aes(x = pts, y = reb)) + 
+d <- ggplot(timmy_2013_team, aes(x = pts, y = reb)) + 
   geom_point(aes(colour = location), alpha = 0.5, position = "jitter") +
   labs(x = "points", y = "rebounds", title = "Tim Duncan Points and Rebounds by location 2013-2014") + guides(color = guide_legend(title = "location")) + facet_wrap(~ opponent_div)
+d
 ```
 <br>
 Except for one game, it appears Tim was not at his best at away games in the Central division.  
